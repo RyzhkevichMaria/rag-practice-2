@@ -1,0 +1,45 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="RAG architecture" id="rag1">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" page="1" pageWidth="1400" pageHeight="900">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="src" value="Источник: PDF/DOCX регламенты (файловая шара)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1"><mxGeometry x="40" y="60" width="180" height="70" as="geometry"/></mxCell>
+        <mxCell id="ing" value="1. Ingestion: парсинг, очистка, OCR (Python)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="300" y="60" width="180" height="70" as="geometry"/></mxCell>
+        <mxCell id="chk" value="2. Chunking: по заголовкам, 500 токенов, overlap 80" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="560" y="60" width="180" height="70" as="geometry"/></mxCell>
+        <mxCell id="emb" value="3. Embedding: bge-m3 (Ollama), dense + sparse" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="820" y="60" width="180" height="70" as="geometry"/></mxCell>
+
+        <mxCell id="minio" value="MinIO: сырые файлы (bronze)" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="300" y="240" width="180" height="80" as="geometry"/></mxCell>
+        <mxCell id="pg" value="Postgres: реестр документов, версии, ACL" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="560" y="240" width="180" height="80" as="geometry"/></mxCell>
+        <mxCell id="qd" value="4. Qdrant: HNSW (dense) + BM25-sparse, payload-фильтры" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="820" y="240" width="180" height="90" as="geometry"/></mxCell>
+
+        <mxCell id="usr" value="Сотрудник (вопрос на естественном языке)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1"><mxGeometry x="40" y="450" width="180" height="70" as="geometry"/></mxCell>
+        <mxCell id="api" value="Query API (FastAPI): hybrid search, RRF, rerank" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1"><mxGeometry x="300" y="450" width="180" height="70" as="geometry"/></mxCell>
+        <mxCell id="llm" value="5. Генерация: qwen2.5 (Ollama), ответ со ссылками" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1"><mxGeometry x="560" y="450" width="180" height="70" as="geometry"/></mxCell>
+        <mxCell id="ev" value="Оценка качества: golden set, recall@k, MRR, faithfulness" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="820" y="450" width="180" height="70" as="geometry"/></mxCell>
+
+        <mxCell id="e1" value="PDF/DOCX, batch по расписанию" style="endArrow=classic;html=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="src" target="ing"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" value="сырые файлы + sha256" style="endArrow=classic;html=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="ing" target="minio"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" value="метаданные: doc_id, версия, hash" style="endArrow=classic;html=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="ing" target="pg"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" value="чистый текст + структура" style="endArrow=classic;html=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="ing" target="chk"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5" value="чанки + метаданные" style="endArrow=classic;html=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="chk" target="emb"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e6" value="upsert: векторы + payload" style="endArrow=classic;html=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="emb" target="qd"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="e7" value="вопрос" style="endArrow=classic;html=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="usr" target="api"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e8" value="hybrid-запрос: dense + BM25" style="endArrow=classic;html=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="api" target="qd"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="390" y="385"/><mxPoint x="910" y="385"/></Array></mxGeometry></mxCell>
+        <mxCell id="e9" value="актуальная версия, права доступа" style="endArrow=classic;html=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="pg" target="api"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="650" y="410"/><mxPoint x="420" y="410"/></Array></mxGeometry></mxCell>
+        <mxCell id="e10" value="промпт: вопрос + top-k чанки" style="endArrow=classic;html=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="api" target="llm"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e11" value="ответ + ссылки на документы" style="endArrow=classic;html=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="llm" target="usr"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="650" y="570"/><mxPoint x="130" y="570"/></Array></mxGeometry></mxCell>
+        <mxCell id="e12" value="тестовые вопросы" style="endArrow=classic;html=1;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="ev" target="api"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="910" y="610"/><mxPoint x="390" y="610"/></Array></mxGeometry></mxCell>
+
+        <mxCell id="lg" value="Легенда" style="text;html=1;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="40" y="660" width="80" height="20" as="geometry"/></mxCell>
+        <mxCell id="l1" value="Offline-индексация (batch)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="40" y="690" width="170" height="30" as="geometry"/></mxCell>
+        <mxCell id="l2" value="Хранилища" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="230" y="690" width="130" height="30" as="geometry"/></mxCell>
+        <mxCell id="l3" value="Online-обслуживание запроса" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1"><mxGeometry x="380" y="690" width="190" height="30" as="geometry"/></mxCell>
+        <mxCell id="l4" value="Оценка качества" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="590" y="690" width="140" height="30" as="geometry"/></mxCell>
+        <mxCell id="l5" value="Внешние участники" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1"><mxGeometry x="750" y="690" width="150" height="30" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
